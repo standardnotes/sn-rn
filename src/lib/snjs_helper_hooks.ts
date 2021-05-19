@@ -5,12 +5,15 @@ import {
   ButtonType,
   isSameDay,
   NoteMutator,
+  SNActionsExtension,
+  SNApplication,
   SNNote,
   StorageEncryptionPolicies,
 } from '@standardnotes/snjs';
 import React, { useCallback, useEffect } from 'react';
 import { LockStateType } from './application_state';
 import { Editor } from './editor';
+import { str } from './strings';
 
 export const useSignedIn = (
   signedInCallback?: () => void,
@@ -289,7 +292,7 @@ export const useDeleteNoteWithPrivileges = (
   const application = React.useContext(ApplicationContext);
 
   const trashNote = useCallback(async () => {
-    const title = 'Move to Trash';
+    const title = str['Move to trash'];
     const message = 'Are you sure you want to move this note to the trash?';
 
     const confirmed = await application?.alertService?.confirm(
@@ -498,4 +501,30 @@ export const useProtectOrUnprotectNote = (
   }, [application, note, canChangeNote]);
 
   return [protectOrUnprotectNote];
+};
+
+export function getListedExtensions(application: SNApplication | undefined) {
+  const LISTED_IDENTIFIER = 'org.standardnotes.listed';
+  return (application?.actionsManager.getExtensions() || []).filter(
+    extension => extension.package_info?.identifier === LISTED_IDENTIFIER
+  );
+}
+
+export const useLoadListedExtension = (
+  note: SNNote
+): [
+  (extension: SNActionsExtension) => Promise<SNActionsExtension | undefined>
+] => {
+  // Context
+  const application = React.useContext(ApplicationContext);
+
+  const loadListedExtension = useCallback(
+    async (extension: SNActionsExtension) =>
+      await application?.actionsManager.loadExtensionInContextOfItem(
+        extension,
+        note
+      ),
+    [application, note]
+  );
+  return [loadListedExtension];
 };

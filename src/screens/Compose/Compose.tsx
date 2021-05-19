@@ -1,4 +1,6 @@
+import { Icon } from '@Components/Icon';
 import { AppStateEventType } from '@Lib/application_state';
+import { str } from '@Lib/strings';
 import { isNullOrUndefined } from '@Lib/utils';
 import { ApplicationContext } from '@Root/ApplicationContext';
 import { SCREEN_COMPOSE } from '@Screens/screens';
@@ -12,12 +14,10 @@ import {
   NoteMutator,
   SNComponent,
 } from '@standardnotes/snjs';
-import { ICON_ALERT, ICON_LOCK } from '@Style/icons';
-import { ThemeService, ThemeServiceContext } from '@Style/theme_service';
+import { ThemeServiceContext } from '@Style/theme_service';
 import { lighten } from '@Style/utils';
 import React, { createRef } from 'react';
 import { Keyboard, Platform, View } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
 import SNTextView from 'sn-textview';
 import { ThemeContext } from 'styled-components';
 import { ComponentView } from './ComponentView';
@@ -471,17 +471,17 @@ export class Compose extends React.Component<{}, State> {
               {this.noteLocked && (
                 <LockedContainer>
                   <Icon
-                    name={ThemeService.nameForIcon(ICON_LOCK)}
+                    type="pencilOff"
                     size={16}
                     color={theme.stylekitBackgroundColor}
                   />
-                  <LockedText>Note Locked</LockedText>
+                  <LockedText>{str['Editing disabled']}</LockedText>
                 </LockedContainer>
               )}
               {this.state.webViewError && (
                 <LockedContainer>
                   <Icon
-                    name={ThemeService.nameForIcon(ICON_ALERT)}
+                    type="warning"
                     size={16}
                     color={theme.stylekitBackgroundColor}
                   />

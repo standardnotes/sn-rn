@@ -49,6 +49,7 @@ type Props = {
     label: string;
   }[];
   onPressItem: (noteUuid: SNNote['uuid']) => void;
+  onLongPressItem: (noteUuid: SNNote['uuid']) => void;
   selectedNoteId: string | undefined;
   sortType: CollectionSort;
   hideDates: boolean;
@@ -180,7 +181,7 @@ export const NoteList = (props: Props) => {
     setNoteListScrolled(true);
   };
 
-  const renderItem: ListRenderItem<SNNote> | null | undefined = ({ item }) => {
+  const renderItem: ListRenderItem<SNNote> = ({ item }) => {
     return (
       <NoteCell
         note={item}
@@ -189,6 +190,10 @@ export const NoteList = (props: Props) => {
         hideDates={props.hideDates}
         hidePreviews={props.hidePreviews}
         highlighted={item.uuid === props.selectedNoteId}
+        onLongPressItem={() => {
+          dismissKeyboard();
+          props.onLongPressItem(item.uuid);
+        }}
       />
     );
   };

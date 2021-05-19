@@ -1,16 +1,6 @@
-import {
-  useChangeNote,
-  useDeleteNoteWithPrivileges,
-  useProtectOrUnprotectNote,
-} from '@Lib/snjs_helper_hooks';
-import { ApplicationContext } from '@Root/ApplicationContext';
 import { CollectionSort, isNullOrUndefined, SNNote } from '@standardnotes/snjs';
-import {
-  CustomActionSheetOption,
-  useCustomActionSheet,
-} from '@Style/custom_action_sheet';
-import React, { useContext, useRef, useState } from 'react';
-import { Text, View } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { Text } from 'react-native';
 import {
   Container,
   DeletedText,
@@ -28,6 +18,7 @@ type Props = {
   hideDates: boolean;
   hidePreviews: boolean;
   sortType: CollectionSort;
+  onLongPressItem: () => void;
 };
 
 export const NoteCell = ({
@@ -37,34 +28,14 @@ export const NoteCell = ({
   sortType,
   hideDates,
   hidePreviews,
+  onLongPressItem,
 }: Props) => {
-  // Context
-  const application = useContext(ApplicationContext);
-
-  const [changeNote] = useChangeNote(note);
-  const [protectOrUnprotectNote] = useProtectOrUnprotectNote(note);
-
   // State
   const [selected, setSelected] = useState(false);
 
   // Ref
   const selectionTimeout = useRef<number>();
-  const elementRef = useRef<View>(null);
-
-  const { showActionSheet } = useCustomActionSheet();
-
-  const [deleteNote] = useDeleteNoteWithPrivileges(
-    note,
-    async () => {
-      await application?.deleteItem(note);
-    },
-    () => {
-      changeNote(mutator => {
-        mutator.trashed = true;
-      });
-    },
-    undefined
-  );
+  const elementRef = useRef(null);
 
   const highlight = Boolean(selected || highlighted);
 
@@ -93,95 +64,7 @@ export const NoteCell = ({
     if (note.errorDecrypting) {
       return;
     }
-
-    if (note.protected) {
-      showActionSheet(
-        note.safeTitle(),
-        [
-          {
-            text: 'Note Protected',
-          },
-        ],
-        undefined,
-        elementRef.current ?? undefined
-      );
-    } else {
-      let options: CustomActionSheetOption[] = [];
-
-      options.push({
-        text: note.pinned ? 'Unpin' : 'Pin',
-        key: 'pin',
-        callback: () =>
-          changeNote(mutator => {
-            mutator.pinned = !note.pinned;
-          }),
-      });
-
-      options.push({
-        text: note.archived ? 'Unarchive' : 'Archive',
-        key: 'archive',
-        callback: () => {
-          if (note.locked) {
-            application?.alertService.alert(
-              "This note is locked. If you'd like to archive it, unlock it, and try again."
-            );
-            return;
-          }
-
-          changeNote(mutator => {
-            mutator.archived = !note.archived;
-          });
-        },
-      });
-
-      options.push({
-        text: note.locked ? 'Unlock' : 'Lock',
-        key: 'lock',
-        callback: () =>
-          changeNote(mutator => {
-            mutator.locked = !note.locked;
-          }),
-      });
-
-      options.push({
-        text: note.protected ? 'Unprotect' : 'Protect',
-        key: 'protect',
-        callback: async () => await protectOrUnprotectNote(),
-      });
-
-      if (!note.trashed) {
-        options.push({
-          text: 'Move to Trash',
-          key: 'trash',
-          destructive: true,
-          callback: async () => deleteNote(false),
-        });
-      } else {
-        options = options.concat([
-          {
-            text: 'Restore',
-            key: 'restore-note',
-            callback: () => {
-              changeNote(mutator => {
-                mutator.trashed = false;
-              });
-            },
-          },
-          {
-            text: 'Delete Permanently',
-            key: 'delete-forever',
-            destructive: true,
-            callback: async () => deleteNote(true),
-          },
-        ]);
-      }
-      showActionSheet(
-        note.safeTitle(),
-        options,
-        undefined,
-        elementRef.current ?? undefined
-      );
-    }
+    onLongPressItem();
   };
 
   const padding = 14;
@@ -197,7 +80,7 @@ export const NoteCell = ({
       onPressOut={_onPressOut}
       onLongPress={onLongPress}
     >
-      <Container ref={elementRef as any} selected={highlight} padding={padding}>
+      <Container ref={elementRef} selected={highlight} padding={padding}>
         {note.deleted && <DeletedText>Deleting...</DeletedText>}
 
         <NoteCellFlags note={note} highlight={highlight} />
